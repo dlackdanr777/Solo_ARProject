@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "690510481602",
+    "project_id": "arproject-e2baf",
+    "storage_bucket": "arproject-e2baf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690510481602:android:16eb40a1b3520575e2135b",
+        "android_client_info": {
+          "package_name": "com.Muks.Solo_ARProject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADY1d7r_m_rcvNbb0JodYlztlYoPa9OhQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
