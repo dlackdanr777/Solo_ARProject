@@ -56,9 +56,12 @@ public class DatabaseManager : SingletonHandler<DatabaseManager>
     public override void Awake()
     {
         base.Awake();
+    }
 
+
+    public void Start()
+    {
         _firestore = FirebaseFirestore.DefaultInstance;
-
         ReadFurnitureData();
     }
 
@@ -77,11 +80,12 @@ public class DatabaseManager : SingletonHandler<DatabaseManager>
     private void ReadFurnitureData()
     {
         Debug.Log("Read Firestore...");
-
+        TestCanvas.Instance.SetText("Read Firestore...");
         CollectionReference itemRef = _firestore.Collection("Furniture");
 
         itemRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
+
             QuerySnapshot snapshots = task.Result;
 
             foreach (DocumentSnapshot document in snapshots.Documents)
@@ -94,8 +98,8 @@ public class DatabaseManager : SingletonHandler<DatabaseManager>
 
                 FurnitureData data = new FurnitureData(id, name);
                 _furnitureDataDic.Add(id, data);
+                TestCanvas.Instance.SetText(_furnitureDataDic.Count.ToString());
             }
-
         });
     } 
 }
