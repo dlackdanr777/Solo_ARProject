@@ -47,6 +47,7 @@ public class ObjectManager : MonoBehaviour
     void Start()
     {
         _uiBuild.Init(this);
+        _indicator.SetActive(false);
     }
 
     // Update is called once per frame
@@ -162,8 +163,6 @@ public class ObjectManager : MonoBehaviour
         if (Input.touchCount == 0)
             return;
 
-
-
         Touch touch = Input.GetTouch(0);
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(touch.position);
@@ -178,7 +177,6 @@ public class ObjectManager : MonoBehaviour
                 if (hit.collider.gameObject != obj)
                     continue;
 
-                TestCanvas.Instance.SetText(obj.name + "¹ß°ß");
                 ChangeCorrectionState(obj);
                 return;
             }

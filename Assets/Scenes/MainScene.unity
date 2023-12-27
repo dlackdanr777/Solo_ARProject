@@ -3389,7 +3389,7 @@ MonoBehaviour:
   _buildState: 0
   _uiBuild: {fileID: 51201387}
   _indicator: {fileID: 1315972812}
-  _rotMultiplier: 20
+  _rotMultiplier: 45
 --- !u!1 &2103378596
 GameObject:
   m_ObjectHideFlags: 0
