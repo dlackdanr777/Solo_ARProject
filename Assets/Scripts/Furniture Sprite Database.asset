@@ -14,8 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _furnitureSpriteDataList:
   - _id: 0
-    _sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+    _sprite: {fileID: 21300000, guid: 1f8713112fa381b48ab59b06b4d1951d, type: 3}
   - _id: 1
-    _sprite: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+    _sprite: {fileID: 21300000, guid: a1752102de9283a46a49ce4a391f8908, type: 3}
   - _id: 2
-    _sprite: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+    _sprite: {fileID: 21300000, guid: 5f5d2b0d0472bec4eb335c5fc90e8f14, type: 3}
+  - _id: 3
+    _sprite: {fileID: 21300000, guid: 230d8a23fdb021349823373350a85c94, type: 3}
+  - _id: 4
+    _sprite: {fileID: 21300000, guid: 2c22eafc145637f46993c1d1127da1de, type: 3}
+  - _id: 5
+    _sprite: {fileID: 21300000, guid: e10b67b7e23c3c846a076caf50193600, type: 3}

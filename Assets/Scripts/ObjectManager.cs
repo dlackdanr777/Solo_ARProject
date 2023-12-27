@@ -2,11 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
+using Muks.DataBind;
+using UnityEngine.EventSystems;
 
+public enum BuildState
+{
+    None,
+    Build,
+    Correction
+}
 
 [RequireComponent(typeof(ARRaycastManager))]
 public class ObjectManager : MonoBehaviour
 {
+
+
+    [SerializeField] private BuildState _buildState;
+    public BuildState BuildState => _buildState;
+
     [SerializeField] private UIBuild _uiBuild;
 
     [SerializeField] private GameObject _indicator;
@@ -18,8 +31,13 @@ public class ObjectManager : MonoBehaviour
     private Dictionary<string, FurnitureData> _furnitureDataDic;
     public Dictionary<string, FurnitureData> FurnitureDataDic => _furnitureDataDic;
 
+    private FurnitureData _currentFurnitureData;
 
-    private bool _isStart;
+    private List<ARRaycastHit> _hitInfo = new List<ARRaycastHit>();
+
+    private List<GameObject> _createdObjList = new List<GameObject>();
+
+    private GameObject _correctionObj;
 
     private void Awake()
     {
@@ -34,108 +52,161 @@ public class ObjectManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        StartBuild();
-        CreateFurniture();
-
-        //ARRaycastHit hitInfo = CastARRay();
-
-        //TouchScreen(hitInfo);
+        ControllBuildState();
     }
 
-    public void StartBuild()
+    public void ChangeBuildState(FurnitureData furnitureData)
     {
-        _isStart = true;
-    }
-
-    public void EndBuild()
-    {
-        _isStart = false;
+        ChangedState(BuildState.Build);
+        _currentFurnitureData = furnitureData;
+        _uiBuild.ButtonSetActive(false);
+        _uiBuild.ExitBuildButtonSetActive(true);
+        DataBind.SetTextValue("BuildText", "[" + furnitureData.Name + "] 설치");
     }
 
 
-    Vector3 _tempTouchPos;
-    Vector3 _tempAngle;
-
-    float _touchTimer;
-
-    /* private void TouchScreen(ARRaycastHit hitInfo)
-     {
-         if (Input.touchCount > 0)
-         {
-             Touch touch = Input.GetTouch(0);
-             _touchTimer += Time.deltaTime;
-
-             if(2 < _touchTimer)
-             {
-                 _tempTouchPos = touch.position;
-                 _tempAngle = _showcaseObj.transform.eulerAngles;
-
-                 if (hitInfo.trackable)
-                 {
-                     _showcaseObj.SetActive(true);
-                     _showcaseObj.transform.position = hitInfo.pose.position;
-                 }
-                 _touchTimer = 0;
-             }
-
-             if (touch.phase == TouchPhase.Moved)
-             {
-                 float targetRotate = _tempTouchPos.x - touch.position.x;
-                 _showcaseObj.transform.eulerAngles = _tempAngle + (Vector3.up * targetRotate);
-             }
-         }
-         else
-         {
-             _touchTimer = 0;
-         }
-     }*/
-
-    public void CreateFurniture()
+    public void ChangeCorrectionState(GameObject obj)
     {
-        if (!_isStart)
+        _correctionObj = obj;
+        ChangedState(BuildState.Correction);
+        _uiBuild.CorrectionButtonsSerActive(true);
+        _uiBuild.ButtonSetActive(false);
+        DataBind.SetTextValue("BuildText", "수정");
+    }
+
+
+    public void ChangeNoneState()
+    {
+        ChangedState(BuildState.None);
+        _uiBuild.ButtonSetActive(true);
+        DataBind.SetTextValue("BuildText", "");
+    }
+
+
+    private void ChangedState(BuildState state)
+    {
+        _buildState = state;
+        _indicator.SetActive(false);
+        _uiBuild.BuildButtonSetActive(false);
+        _uiBuild.ExitBuildButtonSetActive(false);
+        _uiBuild.CorrectionButtonsSerActive(false);
+    }
+
+
+    public void ControllBuildState()
+    {
+        switch (_buildState)
+        {
+            case BuildState.None:
+                StartCorrection();
+                break;
+
+            case BuildState.Build:
+                BuildMode();
+                break;
+
+            case BuildState.Correction:
+                break;
+        }
+    }
+
+
+    public void BuildMode()
+    {
+        if (Input.touchCount == 0)
             return;
 
+        Touch touch = Input.GetTouch(0);
+
+        if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+            return;
+
+        if (_raycastManager.Raycast(touch.position, _hitInfo, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
+        {
+            _indicator.SetActive(true);
+
+            _indicator.transform.position = _hitInfo[0].pose.position;
+            _indicator.transform.rotation = _hitInfo[0].pose.rotation;
+
+            _indicator.transform.forward = Vector3.up;
+
+            _uiBuild.BuildButtonSetActive(true);
+        }
+        else
+        {
+            _indicator.SetActive(false);
+            _uiBuild.BuildButtonSetActive(false);
+        }
+    }
+
+    public void OnBuildButtonClicked()
+    {
+        GameObject obj = Instantiate(_currentFurnitureData.Prefab);
+        obj.transform.position = _indicator.transform.position;
+        obj.transform.rotation = _hitInfo[0].pose.rotation;
+
+        _createdObjList.Add(obj);
+
+        _uiBuild.BuildButtonSetActive(false);
+        ChangeNoneState();
+    }
+
+    public void OnExitBuildButtonClicked()
+    {
+        ChangeNoneState();
+    }
+
+
+    private void StartCorrection()
+    {
         if (Input.touchCount == 0)
             return;
 
 
+
         Touch touch = Input.GetTouch(0);
-        List<ARRaycastHit> hitInfo = new List<ARRaycastHit>();
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(touch.position);
 
-        if (_raycastManager.Raycast(touch.position, hitInfo, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
+        if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+            return;
+
+        if (Physics.Raycast(ray, out hit))
         {
-            _indicator.SetActive(true);
-            _indicator.transform.position = hitInfo[0].pose.position;
-            _indicator.transform.rotation = hitInfo[0].pose.rotation;
+            foreach(GameObject obj in _createdObjList)
+            {
+                if (hit.collider.gameObject != obj)
+                    continue;
 
-            _indicator.transform.forward = Vector3.up;
+                TestCanvas.Instance.SetText(obj.name + "발견");
+                ChangeCorrectionState(obj);
+                return;
+            }
+            
         }
         else
         {
-            _indicator.SetActive(false);
-        }
+            ChangeNoneState();
+        } 
     }
 
-
-   /* ARRaycastHit CastARRay()
+    public void OnDeleteObjButtonClicked()
     {
-        Vector2 HitPoint = new Vector2(Input.Touch);
+        _createdObjList.Remove(_correctionObj);
+        Destroy(_correctionObj);
+        _correctionObj = null;
 
-        List<ARRaycastHit> hitInfo = new List<ARRaycastHit>();
+        ChangeNoneState();
 
-        if (_raycastManager.Raycast(HitPoint, hitInfo, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
-        {
-            _indicator.SetActive(true);
-            _indicator.transform.position = hitInfo[0].pose.position;
-            _indicator.transform.rotation = hitInfo[0].pose.rotation;
+    }
 
-            _indicator.transform.forward = Vector3.up;
-        }
-        else
-        {
-            _indicator.SetActive(false);
-        }
+    public void OnRotateObjButtonClicked(int dir)
+    {
+        _correctionObj.transform.Rotate(Vector3.up * dir * _rotMultiplier * Time.deltaTime);
+    }
 
-        return hitInfo[0];
-    }*/
+    public void OnChangeNoneStateButtonClicked()
+    {
+        ChangeNoneState();
+    }
 }
